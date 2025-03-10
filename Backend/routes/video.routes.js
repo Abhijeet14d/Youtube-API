@@ -156,8 +156,8 @@ videoRouter.post("/like", checkAuth, async (req, res) =>{
     try {
         const { videoId } = req.body;
         await Video.findByIdAndUpdate(videoId, {
-            $addToSet: { likes: req.user._id },
-            $pull : { dislikes: req.user._id },
+            $addToSet: { likedBy: req.user._id },
+            $pull : { dislikedBy: req.user._id },
         });
         res.status(200).json({msg: 'Video liked successfully'});
     } catch (error) {
@@ -170,8 +170,8 @@ videoRouter.post("/dislike", checkAuth, async (req, res) =>{
     try {
         const { videoId } = req.body;
         await Video.findByIdAndUpdate(videoId, {
-            $addToSet: { dislikes: req.user._id },
-            $pull : { likes: req.user._id },
+            $addToSet: { dislikedBy: req.user._id },
+            $pull : { likedBy: req.user._id },
         });
         res.status(200).json({msg: 'Video disliked successfully'});
     } catch (error) {
