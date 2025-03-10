@@ -100,4 +100,83 @@ videoRouter.get('/my-videos', checkAuth, async (req, res)=>{
     }
 });
 
+// get all videos
+videoRouter.get("/all", async (req, res) => {
+    try {
+        const videos = await Video.find({ user_id: req.user._id }).sort({ createdAt: -1 });
+        res.status(200).json({videos});
+    } catch (error) {
+        res.status(500).json({msg: 'Error fetching videos', error: error.message});
+    }
+});
+
+// get video by id
+videoRouter.get('/:id', checkAuth, async (req, res)=>{
+    try {
+        const videoId = req.params.id;
+        const userId = req.user._id;
+
+        const video = await Video.findByIdAndUpdate(videoId, {
+            $addToSet: { viewedBy: userId },
+        },
+        { new: true }
+        );
+        if(!video) return res.status(404).json({msg: 'Video not found'});
+        res.status(200).json({video
+        });
+    } catch (error) {
+        res.status(500).json({msg: 'Error fetching video', error: error.message});
+    }
+});
+
+// get video by category
+videoRouter.get("/category/:category", async (req, res) => {
+    try {
+        const video = await Video.find({ category: req.params.category }).sort({ createdAt: -1 });
+        res.status(200).json({video});
+    } catch (error) {
+        res.status(500).json({msg: 'Error fetching videos', error: error.message});
+    }
+});
+
+// get video by tag
+videoRouter.get("/tag/:tag", async (req, res) => {
+    try {
+        const tag = req.params.tag;
+        const videos = await Video.find({ tags: tag }).sort({ createdAt: -1 });
+        res.status(200).json({videos});
+    } catch (error) {
+        res.status(500).json({msg: 'Error fetching videos', error: error.message
+        });
+    }
+});
+
+// Like video
+videoRouter.post("/like", checkAuth, async (req, res) =>{
+    try {
+        const { videoId } = req.body;
+        await Video.findByIdAndUpdate(videoId, {
+            $addToSet: { likes: req.user._id },
+            $pull : { dislikes: req.user._id },
+        });
+        res.status(200).json({msg: 'Video liked successfully'});
+    } catch (error) {
+        res.status(500).json({msg: 'Error liking video', error: error.message});
+    }
+});
+
+// Dislike video
+videoRouter.post("/dislike", checkAuth, async (req, res) =>{
+    try {
+        const { videoId } = req.body;
+        await Video.findByIdAndUpdate(videoId, {
+            $addToSet: { dislikes: req.user._id },
+            $pull : { likes: req.user._id },
+        });
+        res.status(200).json({msg: 'Video disliked successfully'});
+    } catch (error) {
+        res.status(500).json({msg: 'Error disliking video', error: error.message});
+    }
+});
+
 module.exports = videoRouter;
